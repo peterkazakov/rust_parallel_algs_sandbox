@@ -8,21 +8,21 @@ Includes:
 - Channels
 
 Build in release mode:
-```aidl
+```
 RUSTFLAGS="-C target-cpu=native" cargo run --release
 ```
 
 Generate random files (change params to set file size) with:
-```aidl
+```
 tr -dc "A-Za-z 0-9" < /dev/urandom | fold -w100|head -n 100 > file_hundred.txt
 ```
 
 Run example with:
-```aidl
+```
 ./target/release/rust_parallel_algs_sandbox -n 16
 ```
 Example result:
-```aidl
+```
 ./target/release/rust_parallel_algs_sandbox -n 16
 Running parallel tester with 16 threads on "../data/file_100.txt"
 Disclaimer: note that in this evaluation order of execution matters due to cache performance
