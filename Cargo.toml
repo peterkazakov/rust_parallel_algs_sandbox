@@ -1,0 +1,15 @@
+[package]
+name = "rust_parallel_algs_sandbox"
+version = "0.1.0"
+edition = "2021"
+authors = ["Peter Kazakov <peterkazakov@yahoo.com>"]
+license = "MIT OR Apache-2.0"
+description = "Sandbox to compare parallel algorithms with Rust"
+readme = "README.md"
+
+[dependencies]
+rayon="1.5.1"
+structopt = "*"
+structopt-derive = "*"
+lazy_static = "1.4.0"
+const_format = "*"
