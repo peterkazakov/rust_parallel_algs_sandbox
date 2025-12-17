@@ -16,10 +16,10 @@ use structopt::StructOpt;
 struct Cli {
     /// The path to the file to read
     #[structopt(
-    short = "f",
-    long = "File",
-    parse(from_os_str),
-    default_value = "./data/file_100.txt"
+        short = "f",
+        long = "File",
+        parse(from_os_str),
+        default_value = "./data/file_100.txt"
     )]
     pub path: std::path::PathBuf,
     #[structopt(short = "n", long = "Number of threads", default_value = "16")]
@@ -57,13 +57,16 @@ pub fn occurrence_u8_simd(needle: u8, bytes: &[u8]) -> usize {
         });
         let reminder = bytes.len() % 32;
         if reminder > 0 {
-            count += bytes[..bytes.len()-reminder].iter().filter(|c| **c == needle).count() as usize
+            count += bytes[..bytes.len() - reminder]
+                .iter()
+                .filter(|c| **c == needle)
+                .count()
         }
         count
     }
 }
 
-fn report(function_to_measure: fn(&'static String) -> i32, explanation: &str) -> () {
+fn report(function_to_measure: fn(&'static str) -> i32, explanation: &str) {
     let start = Instant::now();
     let counter = function_to_measure(&DATA);
     let duration = start.elapsed();
@@ -118,20 +121,20 @@ fn _get_chunked_lines(contents: &'static str) -> Vec<&'static str> {
         .unwrap()
 }
 
-fn method_justcounting(contents: &'static String) -> i32 {
+fn method_justcounting(contents: &'static str) -> i32 {
     counta(contents)
 }
 
-fn method_noparallel(contents: &'static String) -> i32 {
+fn method_noparallel(contents: &'static str) -> i32 {
     let lines = contents.trim().split("\n");
-    lines.into_iter().map(|line| counta(line)).sum()
+    lines.into_iter().map(counta).sum()
 }
 
-fn method_justcounting_simd(contents: &'static String) -> i32 {
+fn method_justcounting_simd(contents: &'static str) -> i32 {
     occurrence_u8_simd(97 /*'a'*/, contents.as_bytes()) as i32
 }
 
-fn method_mutex(contents: &'static String) -> i32 {
+fn method_mutex(contents: &'static str) -> i32 {
     let lines = contents.trim().split("\n");
     let mut handles = vec![];
     let counter = Arc::new(Mutex::new(0i32));
@@ -152,7 +155,7 @@ fn method_mutex(contents: &'static String) -> i32 {
 }
 
 #[allow(dead_code)]
-fn method_atomics(contents: &'static String) -> i32 {
+fn method_atomics(contents: &'static str) -> i32 {
     let lines = contents.split("\n");
     let mut handles = vec![];
     let counter = Arc::new(AtomicI32::new(0));
@@ -172,7 +175,7 @@ fn method_atomics(contents: &'static String) -> i32 {
     counter.load(Ordering::SeqCst)
 }
 
-fn method_atomics_chunks(contents: &'static String) -> i32 {
+fn method_atomics_chunks(contents: &'static str) -> i32 {
     let lines = _get_chunked_lines(contents);
     let mut handles = vec![];
     let counter = Arc::new(AtomicI32::new(0));
@@ -191,14 +194,14 @@ fn method_atomics_chunks(contents: &'static String) -> i32 {
     counter.load(Ordering::SeqCst)
 }
 
-fn method_atomics_chunks_simd(contents: &'static String) -> i32 {
+fn method_atomics_chunks_simd(contents: &'static str) -> i32 {
     let lines = _get_chunked_lines(contents);
     let mut handles = vec![];
     let counter = Arc::new(AtomicI32::new(0));
     for line in lines {
         let counter = Arc::clone(&counter);
         let handle = thread::spawn(move || {
-            let ca = occurrence_u8_simd( 97, line.as_bytes()) as i32;
+            let ca = occurrence_u8_simd(97, line.as_bytes()) as i32;
             counter.fetch_add(ca, Ordering::SeqCst);
         });
         handles.push(handle);
@@ -210,7 +213,7 @@ fn method_atomics_chunks_simd(contents: &'static String) -> i32 {
     counter.load(Ordering::SeqCst)
 }
 
-fn method_mutex_chunks(contents: &'static String) -> i32 {
+fn method_mutex_chunks(contents: &'static str) -> i32 {
     let lines = _get_chunked_lines(contents);
     let mut handles = vec![];
     let counter = Arc::new(Mutex::new(0i32));
@@ -231,17 +234,20 @@ fn method_mutex_chunks(contents: &'static String) -> i32 {
     res
 }
 
-fn method_rayon_chunks(contents: &'static String) -> i32 {
+fn method_rayon_chunks(contents: &'static str) -> i32 {
     let lines = _get_chunked_lines(contents);
     lines.par_iter().map(|s| counta(s)).sum()
 }
 
-fn method_rayon_chunks_simd(contents: &'static String) -> i32 {
+fn method_rayon_chunks_simd(contents: &'static str) -> i32 {
     let lines = _get_chunked_lines(contents);
-    lines.par_iter().map(|s| occurrence_u8_simd(97, s.as_bytes()) as i32).sum()
+    lines
+        .par_iter()
+        .map(|s| occurrence_u8_simd(97, s.as_bytes()) as i32)
+        .sum()
 }
 
-fn method_channels_chunks(contents: &'static String) -> i32 {
+fn method_channels_chunks(contents: &'static str) -> i32 {
     let lines = _get_chunked_lines(contents);
     let (tx, rx): (Sender<i32>, Receiver<i32>) = mpsc::channel();
     let mut children = Vec::new();
@@ -274,7 +280,6 @@ fn method_channels_chunks(contents: &'static String) -> i32 {
     }
     sum
 }
-
 
 /*
 size_t memcount_avx2(const void *s, int c, size_t n)
