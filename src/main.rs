@@ -57,7 +57,7 @@ pub fn occurrence_u8_simd(needle: u8, bytes: &[u8]) -> usize {
         });
         let reminder = bytes.len() % 32;
         if reminder > 0 {
-            count += bytes[..bytes.len() - reminder]
+            count += bytes[bytes.len() - reminder..]
                 .iter()
                 .filter(|c| **c == needle)
                 .count()
@@ -105,10 +105,15 @@ fn main() {
 }
 
 fn _chunk_size(total_size: usize) -> usize {
-    match total_size {
-        0..=100 => 1,
-        101..=200 => 2,
-        _ => 1 + total_size / (*NUMBER_OF_THREADS_REF - 1),
+    if *NUMBER_OF_THREADS_REF <= 1 {
+        total_size
+    }
+    else {
+        match total_size {
+            0..=100 => 1,
+            101..=200 => 2,
+            _ => 1 + total_size / (*NUMBER_OF_THREADS_REF - 1),
+        }
     }
 }
 
@@ -180,10 +185,10 @@ fn method_atomics_chunks(contents: &'static str) -> i32 {
     let mut handles = vec![];
     let counter = Arc::new(AtomicI32::new(0));
     for line in lines {
-        let counter = Arc::clone(&counter);
+        let int_counter = Arc::clone(&counter);
         let handle = thread::spawn(move || {
             let ca = counta(line);
-            counter.fetch_add(ca, Ordering::SeqCst);
+            int_counter.fetch_add(ca, Ordering::SeqCst);
         });
         handles.push(handle);
     }
@@ -199,10 +204,10 @@ fn method_atomics_chunks_simd(contents: &'static str) -> i32 {
     let mut handles = vec![];
     let counter = Arc::new(AtomicI32::new(0));
     for line in lines {
-        let counter = Arc::clone(&counter);
+        let int_counter = Arc::clone(&counter);
         let handle = thread::spawn(move || {
             let ca = occurrence_u8_simd(97, line.as_bytes()) as i32;
-            counter.fetch_add(ca, Ordering::SeqCst);
+            int_counter.fetch_add(ca, Ordering::SeqCst);
         });
         handles.push(handle);
     }
