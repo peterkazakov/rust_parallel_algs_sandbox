@@ -66,6 +66,12 @@ pub fn occurrence_u8_simd(needle: u8, bytes: &[u8]) -> usize {
     }
 }
 
+//Suggested by Gemini
+#[no_mangle]
+fn count_gemini(s: &str) -> i32 {
+    bytecount::count(s.as_bytes(), b'a') as i32
+}
+
 fn report(function_to_measure: fn(&'static str) -> i32, explanation: &str) {
     let start = Instant::now();
     let counter = function_to_measure(&DATA);
@@ -94,9 +100,11 @@ fn main() {
     report(method_rayon_chunks, "Rayon with chunks");
     report(method_channels_chunks, "Channels with chunks");
 
+    report(method_bytecount, "Bytecount library (SIMD), suggested by Gemini");
     report(method_justcounting_simd, "Just counting with SIMD");
     report(method_atomics_chunks_simd, "Atomics with SIMD");
     report(method_rayon_chunks_simd, "Rayon with SIMD");
+    report(method_rayon_bytecount_simd, "Rayon with bytecount SIMD");
 
     println!("Please be patient for the next two ...");
 
@@ -137,6 +145,10 @@ fn method_noparallel(contents: &'static str) -> i32 {
 
 fn method_justcounting_simd(contents: &'static str) -> i32 {
     occurrence_u8_simd(97 /*'a'*/, contents.as_bytes()) as i32
+}
+
+fn method_bytecount(contents: &'static str) -> i32 {
+    count_gemini(contents) as i32
 }
 
 fn method_mutex(contents: &'static str) -> i32 {
@@ -252,6 +264,14 @@ fn method_rayon_chunks_simd(contents: &'static str) -> i32 {
         .sum()
 }
 
+fn method_rayon_bytecount_simd(contents: &'static str) -> i32 {
+    let lines = _get_chunked_lines(contents);
+    lines
+        .par_iter()
+        .map(|s| count_gemini(s) as i32)
+        .sum()
+}
+
 fn method_channels_chunks(contents: &'static str) -> i32 {
     let lines = _get_chunked_lines(contents);
     let (tx, rx): (Sender<i32>, Receiver<i32>) = mpsc::channel();
@@ -285,42 +305,3 @@ fn method_channels_chunks(contents: &'static str) -> i32 {
     }
     sum
 }
-
-/*
-size_t memcount_avx2(const void *s, int c, size_t n)
-{
-  __m256i cv = _mm256_set1_epi8(c),
-          zv = _mm256_setzero_si256(),
-         sum = zv, acr0,acr1,acr2,acr3;
-  const char *p,*pe;
-
-  for(p = s; p != (char *)s+(n- (n % (252*32)));)
-  {
-    for(acr0 = acr1 = acr2 = acr3 = zv, pe = p+252*32; p != pe; p += 128)
-    {
-      acr0 = _mm256_sub_epi8(acr0, _mm256_cmpeq_epi8(cv, _mm256_lddqu_si256((const __m256i *)p)));
-      acr1 = _mm256_sub_epi8(acr1, _mm256_cmpeq_epi8(cv, _mm256_lddqu_si256((const __m256i *)(p+32))));
-      acr2 = _mm256_sub_epi8(acr2, _mm256_cmpeq_epi8(cv, _mm256_lddqu_si256((const __m256i *)(p+64))));
-      acr3 = _mm256_sub_epi8(acr3, _mm256_cmpeq_epi8(cv, _mm256_lddqu_si256((const __m256i *)(p+96))));
-      __builtin_prefetch(p+1024);
-    }
-    sum = _mm256_add_epi64(sum, _mm256_sad_epu8(acr0, zv));
-    sum = _mm256_add_epi64(sum, _mm256_sad_epu8(acr1, zv));
-    sum = _mm256_add_epi64(sum, _mm256_sad_epu8(acr2, zv));
-    sum = _mm256_add_epi64(sum, _mm256_sad_epu8(acr3, zv));
-  }
-
-  for(acr0 = zv; p+32 < (char *)s + n; p += 32)
-    acr0 = _mm256_sub_epi8(acr0, _mm256_cmpeq_epi8(cv, _mm256_lddqu_si256((const __m256i *)p)));
-  sum = _mm256_add_epi64(sum, _mm256_sad_epu8(acr0, zv));
-
-  size_t count = _mm256_extract_epi64(sum, 0)
-               + _mm256_extract_epi64(sum, 1)
-               + _mm256_extract_epi64(sum, 2)
-               + _mm256_extract_epi64(sum, 3);
-
-  while(p != (char *)s + n)
-      count += *p++ == c;
-  return count;
-}
-*/

@@ -26,15 +26,17 @@ Example result (please note diff when native build is used wrt SIMD):
 peterkazakov@Peters-MacBook-Pro rust_parallel_algs_sandbox % RUSTFLAGS="-C target-cpu=native" cargo run --release                                       
 Running parallel tester with 16 threads on "./data/file_100.txt"
 Disclaimer: note that in this evaluation order of execution matters due to cache performance
-Just counting, brute force, result is 159003, time elapsed is 13.938458ms
-Splitted and counted like above, result is 159003, time elapsed is 27.089388ms
-Mutex with chunks, result is 159003, time elapsed is 4.821601ms
-Atomics with chunks, result is 159003, time elapsed is 3.498396ms
-Rayon with chunks, result is 159003, time elapsed is 2.857575ms
-Channels with chunks, result is 159003, time elapsed is 2.608122ms
-Just counting with SIMD, result is 159003, time elapsed is 521.032µs
-Atomics with SIMD, result is 159003, time elapsed is 1.190622ms
-Rayon with SIMD, result is 159003, time elapsed is 888.938µs
+Just counting, brute force, result is 159003, time elapsed is 10.902916ms
+Splitted and counted like above, result is 159003, time elapsed is 23.699425ms
+Mutex with chunks, result is 159003, time elapsed is 3.953499ms
+Atomics with chunks, result is 159003, time elapsed is 2.330254ms
+Rayon with chunks, result is 159003, time elapsed is 2.546256ms
+Channels with chunks, result is 159003, time elapsed is 2.300136ms
+Bytecount library (SIMD), suggested by Gemini, result is 159003, time elapsed is 782.881µs
+Just counting with SIMD, result is 159003, time elapsed is 465.689µs
+Atomics with SIMD, result is 159003, time elapsed is 1.067742ms
+Rayon with SIMD, result is 159003, time elapsed is 848.601µs
+Rayon with bytecount SIMD, result is 159003, time elapsed is 763.125µs
 Please be patient for the next two ...
 Atomics with thread per line, result is 159003, time elapsed is 95.896905477s
 Mutex with thread per line, result is 159003, time elapsed is 98.245278407s
@@ -42,20 +44,22 @@ Mutex with thread per line, result is 159003, time elapsed is 98.245278407s
 peterkazakov@Peters-MacBook-Pro rust_parallel_algs_sandbox %  cargo run --release 
 Running parallel tester with 16 threads on "./data/file_100.txt"
 Disclaimer: note that in this evaluation order of execution matters due to cache performance
-Just counting, brute force, result is 159003, time elapsed is 18.096418ms
-Splitted and counted like above, result is 159003, time elapsed is 38.142684ms
-Mutex with chunks, result is 159003, time elapsed is 3.61126ms
-Atomics with chunks, result is 159003, time elapsed is 3.734047ms
-Rayon with chunks, result is 159003, time elapsed is 2.865979ms
-Channels with chunks, result is 159003, time elapsed is 3.467158ms
-Just counting with SIMD, result is 159003, time elapsed is 5.613338ms
-Atomics with SIMD, result is 159003, time elapsed is 1.858793ms
-Rayon with SIMD, result is 159003, time elapsed is 1.677242ms
+Just counting, brute force, result is 159003, time elapsed is 10.055811ms
+Splitted and counted like above, result is 159003, time elapsed is 16.786907ms
+Mutex with chunks, result is 159003, time elapsed is 2.120774ms
+Atomics with chunks, result is 159003, time elapsed is 2.068584ms
+Rayon with chunks, result is 159003, time elapsed is 2.612559ms
+Channels with chunks, result is 159003, time elapsed is 3.320887ms
+Bytecount library (SIMD), suggested by Gemini, result is 159003, time elapsed is 933.423µs
+Just counting with SIMD, result is 159003, time elapsed is 3.453063ms
+Atomics with SIMD, result is 159003, time elapsed is 1.48469ms
+Rayon with SIMD, result is 159003, time elapsed is 1.40692ms
+Rayon with bytecount SIMD, result is 159003, time elapsed is 800.118µs
 Please be patient for the next two ...
 Atomics with thread per line, result is 159003, time elapsed is 95.575450404s
 Mutex with thread per line, result is 159003, time elapsed is 106.100522624s
 ```
-Just counting with SIMD wins on native.
+Just counting with SIMD wins on native, bytecount on generic.
 
 Last two executions are slow on purpose to show possible wrong parallel programming.
 
